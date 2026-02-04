@@ -1,6 +1,6 @@
-import { pool, redisClient } from '../config/database';
-import { getInstanceCount } from './scalingService';
-import { dockerSandbox } from './dockerService';
+import { pool, redisClient } from '../config/database.config';
+import { getInstanceCount } from './scaling.service';
+import { dockerSandbox } from './docker.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 

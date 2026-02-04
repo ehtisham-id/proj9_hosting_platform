@@ -21,5 +21,5 @@ export const scaleSchema = z.object({
 
 export const deploySchema = z.object({
   instances: z.number().min(1).max(10).optional(),
-  env_vars: z.record(z.string()).optional()
+  env_vars: z.record(z.string(), z.string()).optional()
 });

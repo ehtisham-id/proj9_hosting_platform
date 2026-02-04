@@ -1,4 +1,4 @@
-import { saveLog } from './logService';
+import { saveLog } from './log.service';
 
 let logInterval: NodeJS.Timeout;
 

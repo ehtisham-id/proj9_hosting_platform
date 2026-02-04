@@ -1,4 +1,4 @@
-import { pool, redisClient } from '../config/database';
+import { pool, redisClient } from '../config/database.config';
 
 export interface ScalingPolicy {
   min: number;
@@ -9,16 +9,17 @@ export interface ScalingPolicy {
 
 export const getInstanceCount = async (appId: number): Promise<number> => {
   const redisKey = `app:${appId}:instances`;
-  let count = await redisClient.get(redisKey);
+  const cached = await redisClient.get(redisKey);
   
-  if (count === null) {
+  if (cached === null) {
     // Fallback to DB
     const result = await pool.query('SELECT instances FROM apps WHERE id = $1', [appId]);
-    count = result.rows[0]?.instances?.toString() || '1';
-    await redisClient.set(redisKey, count, { EX: 3600 }); // Cache 1h
+    const cacheValue = result.rows[0]?.instances?.toString() || '1';
+    await redisClient.set(redisKey, cacheValue, { EX: 3600 }); // Cache 1h
+    return parseInt(cacheValue) || 1;
   }
   
-  return parseInt(count) || 1;
+  return parseInt(cached) || 1;
 };
 
 export const setInstanceCount = async (appId: number, count: number): Promise<number> => {

@@ -1,5 +1,5 @@
-import { pool } from '../config/database';
-import { AuthRequest } from '../middleware/rbac';
+import { pool } from '../config/database.config';
+import { AuthRequest } from '../middleware/rbac.middleware';
 
 export interface CreateAppInput {
   name: string;
