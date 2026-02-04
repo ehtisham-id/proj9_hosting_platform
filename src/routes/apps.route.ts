@@ -93,3 +93,5 @@ import proxyRouter from './proxy';
 
 // Mount proxy routes
 appsRouter.use('/:id/proxy', proxyRouter);
+// Apply to all routes
+app.use(auditTrail);

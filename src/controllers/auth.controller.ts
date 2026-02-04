@@ -13,6 +13,13 @@ export const signup = async (req: Request, res: Response) => {
     }
 
     const user = await createUser(email, password);
+
+    // set default role for the new user
+    await pool.query(
+      "UPDATE users SET role = $1 WHERE id = $2",
+      ['user', user.id]
+    );
+
     const { accessToken, refreshToken } = generateTokens(user);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
@@ -122,11 +129,7 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
-// In authController.ts signup function, after creating user:
-await pool.query(
-  "UPDATE users SET role = $1 WHERE id = $2",
-  ['user', user.id]
-);
+// Role assignment moved into signup function where `user` is in scope.
 
 // Admin signup (for testing)
 export const adminSignup = async (req: Request, res: Response) => {

@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../services/auth';
+import { verifyAccessToken } from '../services/auth.service';
+import { pool } from '../config/database.config';
+
+export type UserRole = string;
 
 export interface AuthRequest extends Request {
   user?: { userId: number; role: UserRole };

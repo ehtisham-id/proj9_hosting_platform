@@ -1,3 +1,9 @@
+import { Request, Response, NextFunction } from 'express';
+import { pool, redisClient } from '../config/database.config';
+import { AuthRequest } from './rbac.middleware';
+
+export interface SecureRequest extends AuthRequest {}
+
 export const auditTrail = async (req: SecureRequest, res: Response, next: NextFunction) => {
   const start = Date.now();
   
@@ -13,12 +19,11 @@ export const auditTrail = async (req: SecureRequest, res: Response, next: NextFu
     };
     
     // Log to Redis for real-time monitoring
-    await redisClient.lpush('security:audit', JSON.stringify(logEntry));
-    await redisClient.ltrim('security:audit', 0, 999); // Keep last 1000
+    await redisClient.lPush('security:audit', JSON.stringify(logEntry));
+    await redisClient.lTrim('security:audit', 0, 999); // Keep last 1000
   });
   
   next();
 };
 
-// Apply to all routes
-app.use(auditTrail);
+

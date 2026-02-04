@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import { pool, redisClient } from '../config/database';
+import { pool, redisClient } from '../config/database.config';
 import Joi from 'joi';
+const jwt = require('jsonwebtoken') as typeof import('jsonwebtoken');
 
 export interface SecureRequest extends Request {
   user?: { userId: number; role: string };
@@ -75,3 +76,20 @@ export const validateJWT = async (req: SecureRequest, res: Response, next: NextF
   req.user = { userId: user.rows[0].id, role: user.rows[0].role };
   next();
 };
+function verifyAccessToken(token: string): { userId: number; role?: string } | null {
+  try {
+    const secret = process.env.ACCESS_TOKEN_SECRET || 'dev_access_secret';
+    const decoded = jwt.verify(token, secret) as any;
+
+    if (decoded && typeof decoded === 'object' && (decoded.userId || decoded.id)) {
+      return {
+        userId: Number(decoded.userId ?? decoded.id),
+        role: decoded.role
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+

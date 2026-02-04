@@ -1,5 +1,7 @@
 import rateLimit from 'express-rate-limit';
-import { pool, redisClient } from '../config/database';
+import { pool, redisClient } from '../config/database.config';
+import { Request, Response, NextFunction } from 'express';
+import { AuthRequest } from './rbac.middleware';
 
 export const loginRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -23,7 +25,7 @@ export const ipWhitelist = (req: AuthRequest, res: Response, next: NextFunction)
   const allowedIPs = process.env.ALLOWED_IPS?.split(',') || ['127.0.0.1', '::1'];
   const clientIP = req.ip || req.connection.remoteAddress;
   
-  if (!allowedIPs.includes(clientIP)) {
+  if (!allowedIPs.includes(clientIP??'')) {
     return res.status(403).json({ error: 'IP not whitelisted' });
   }
   next();

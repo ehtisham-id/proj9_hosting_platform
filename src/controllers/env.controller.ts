@@ -12,6 +12,10 @@ const envVarSchema = Joi.object({
   value: Joi.string().max(5000).required()
 });
 
+const envVarValueSchema = Joi.object({
+  value: Joi.string().max(5000).required()
+});
+
 export const createEnvHandler = async (req: AuthRequest, res: Response) => {
   const { error, value } = envVarSchema.validate(req.body);
   if (error) {
@@ -70,7 +74,7 @@ export const listEnvHandler = async (req: AuthRequest, res: Response) => {
 };
 
 export const updateEnvHandler = async (req: AuthRequest, res: Response) => {
-  const { error, value } = envVarSchema.tail().validate({ value: req.body.value });
+  const { error, value } = envVarValueSchema.validate({ value: req.body.value });
   if (error) {
     return res.status(400).json({ error: error.details[0].message });
   }
