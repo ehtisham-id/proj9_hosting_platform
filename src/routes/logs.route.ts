@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { getLogsHandler, streamLogsHandler } from '../controllers/logController';
-import { authenticateJWT } from '../middleware/rbac';
-import { generalRateLimit } from '../middleware/security';
+import { getLogsHandler, streamLogsHandler } from '../controllers/log.controller';
+import { authenticateJWT } from '../middleware/rbac.middleware';
+import { generalRateLimit } from '../middleware/security.middleware';
 
 export const logsRouter = Router();
 

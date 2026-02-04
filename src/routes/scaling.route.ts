@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { 
   scaleHandler, scaleUpHandler, scaleDownHandler, metricsHandler 
-} from '../controllers/scalingController';
-import { authenticateJWT } from '../middleware/rbac';
-import { generalRateLimit } from '../middleware/security';
+} from '../controllers/scaling.controller';
+import { authenticateJWT } from '../middleware/rbac.middleware';
+import { generalRateLimit } from '../middleware/security.middleware';
 
 export const scalingRouter = Router();
 

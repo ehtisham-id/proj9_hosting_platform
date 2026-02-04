@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { generateProxyHandler, proxyStatusHandler } from '../controllers/proxyController';
-import { authenticateJWT } from '../middleware/rbac';
-import { generalRateLimit } from '../middleware/security';
+import { generateProxyHandler, proxyStatusHandler } from '../controllers/proxy.controller';
+import { authenticateJWT } from '../middleware/rbac.middleware';
+import { generalRateLimit } from '../middleware/security.middleware';
 
 export const proxyRouter = Router();
 

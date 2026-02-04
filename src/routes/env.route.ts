@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { 
   createEnvHandler, listEnvHandler, updateEnvHandler, deleteEnvHandler 
-} from '../controllers/envController';
-import { authenticateJWT } from '../middleware/rbac';
-import { generalRateLimit } from '../middleware/security';
+} from '../controllers/env.controller';
+import { authenticateJWT } from '../middleware/rbac.middleware';
+import { generalRateLimit } from '../middleware/security.middleware';
 
 export const envRouter = Router();
 

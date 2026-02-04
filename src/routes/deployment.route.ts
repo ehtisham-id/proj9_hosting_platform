@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { deployHandler, stopHandler, containersHandler } from '../controllers/deploymentController';
-import { authenticateJWT } from '../middleware/rbac';
-import { generalRateLimit } from '../middleware/security';
+import { deployHandler, stopHandler, containersHandler } from '../controllers/deployment.controller';
+import { authenticateJWT } from '../middleware/rbac.middleware';
+import { generalRateLimit } from '../middleware/security.middleware';
 
 export const deploymentRouter = Router();
 

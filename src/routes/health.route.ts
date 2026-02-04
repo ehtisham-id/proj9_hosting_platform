@@ -9,3 +9,5 @@ healthCheckRouter.get('/', (req, res) => {
     phase: '0 - Scaffolding Complete'
   });
 });
+
+export default healthCheckRouter;
