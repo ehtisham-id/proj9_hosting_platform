@@ -1,13 +1,16 @@
-import { Pool } from 'pg';
-import Redis from 'redis';
+import { Pool } from "pg";
+import Redis from "redis";
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 export const redisClient = Redis.createClient({
-  url: process.env.REDIS_URL
+  url: process.env.REDIS_URL,
 });
 
 redisClient.connect().catch(console.error);
@@ -30,10 +33,8 @@ export const initDb = async () => {
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
-};
 
-// Add to existing initDb function
-await pool.query(`
+  await pool.query(`
   -- Add role to users table
   ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user';
   
@@ -46,8 +47,7 @@ await pool.query(`
   );
 `);
 
-
-await pool.query(`
+  await pool.query(`
   -- Enhanced apps table
   ALTER TABLE apps ADD COLUMN IF NOT EXISTS git_url VARCHAR(500);
   ALTER TABLE apps ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'stopped';
@@ -65,8 +65,7 @@ await pool.query(`
   );
 `);
 
-
-await pool.query(`
+  await pool.query(`
   CREATE TABLE IF NOT EXISTS app_logs (
     id BIGSERIAL PRIMARY KEY,
     app_id INTEGER REFERENCES apps(id) ON DELETE CASCADE,
@@ -80,7 +79,8 @@ await pool.query(`
   CREATE INDEX IF NOT EXISTS idx_app_logs_timestamp ON app_logs(app_id, timestamp DESC);
 `);
 
-await pool.query(`
+  await pool.query(`
   -- Add scaling metadata to apps
   ALTER TABLE apps ADD COLUMN IF NOT EXISTS scaling_policy JSONB DEFAULT '{"min":1,"max":10}';
 `);
+};

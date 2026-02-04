@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
-import { createUser, findUserByEmail, generateTokens, verifyRefreshToken, saveRefreshToken, verifyPassword, invalidateRefreshToken } from '../services/auth';
+import jwt from 'jsonwebtoken';
+import {pool} from '../config/database.config';
+import { createUser, findUserByEmail, generateTokens, verifyRefreshToken, saveRefreshToken, verifyPassword, invalidateRefreshToken } from '../services/auth.service';
 
 export const signup = async (req: Request, res: Response) => {
   try {

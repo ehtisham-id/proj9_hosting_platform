@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { 
   createEnvVar, getAppEnvVars, updateEnvVar, deleteEnvVar 
-} from '../services/envService';
-import { AuthRequest } from '../middleware/rbac';
+} from '../services/env.service';
+import { AuthRequest } from '../middleware/rbac.middleware';
 import Joi from 'joi';
-import { pool } from '../config/database';
+import { pool } from '../config/database.config';
 
 const envVarSchema = Joi.object({
   key: Joi.string().min(1).max(100).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).required()

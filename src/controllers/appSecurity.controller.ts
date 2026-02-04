@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { createApp, getUserApps } from '../services/appService';
-import { appSchema } from '../validators/schemas';
-import { SecureRequest } from '../middleware/advancedSecurity';
+import { createApp, getUserApps } from '../services/app.service';
+import { appSchema } from '../validators/schema.validator';
+import { SecureRequest } from '../middleware/advancedSecurity.middleware';
 
 export const createAppSecure = async (req: SecureRequest, res: Response) => {
   try {

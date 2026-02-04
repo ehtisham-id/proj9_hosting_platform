@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { dockerSandbox } from '../services/dockerService';
-import { getInstanceCount, getScalingMetrics } from '../services/scalingService';
-import { AuthRequest } from '../middleware/rbac';
-import { pool } from '../config/database';
+import { dockerSandbox } from '../services/docker.service';
+import { getInstanceCount, getScalingMetrics } from '../services/scaling.service';
+import { AuthRequest } from '../middleware/rbac.middleware';
+import { pool } from '../config/database.config';
 import Joi from 'joi';
 
 const deploySchema = Joi.object({

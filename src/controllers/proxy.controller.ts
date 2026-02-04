@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { nginxManager } from '../services/nginxService';
-import { AuthRequest } from '../middleware/rbac';
-import { pool } from '../config/database';
+import { nginxManager } from '../services/nginx.service';
+import { AuthRequest } from '../middleware/rbac.middleware';
+import { pool } from '../config/database.config';
+import fs from 'fs/promises';
 
 export const generateProxyHandler = async (req: AuthRequest, res: Response) => {
   try {

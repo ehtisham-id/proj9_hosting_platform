@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { 
   createApp, getUserApps, getAppById, updateApp, deleteApp 
-} from '../services/appService';
-import { AuthRequest } from '../middleware/rbac';
+} from '../services/app.service';
+import { AuthRequest } from '../middleware/rbac.middleware';
 import Joi from 'joi';
 
 const createSchema = Joi.object({

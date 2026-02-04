@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { getAppLogs, getRecentLogs } from '../services/logService';
-import { AuthRequest } from '../middleware/rbac';
-import { pool } from '../config/database';
-import { startLogSimulation, stopLogSimulation } from '../services/logSimulator';
+import { getAppLogs, getRecentLogs } from '../services/log.service';
+import { AuthRequest } from '../middleware/rbac.middleware';
+import { pool } from '../config/database.config';
+import { startLogSimulation, stopLogSimulation } from '../services/log.simulator';
 
 export const getLogsHandler = async (req: AuthRequest, res: Response) => {
   try {
