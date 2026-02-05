@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import {pool} from '../config/database.config';
-import { createUser, findUserByEmail, generateTokens, verifyRefreshToken, saveRefreshToken, verifyPassword, invalidateRefreshToken } from '../services/auth.service';
+import { createUser, findUserByEmail, findUserById, generateTokens, verifyRefreshToken, saveRefreshToken, verifyPassword, invalidateRefreshToken } from '../services/auth.service';
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -80,8 +80,13 @@ export const refresh = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'No refresh token' });
     }
 
-    const decoded = jwt.decode(refreshToken) as any;
-    if (!decoded?.userId) {
+    let decoded: { userId: number } | null = null;
+    try {
+      decoded = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET || 'heroku-clone-refresh-secret'
+      ) as { userId: number };
+    } catch {
       return res.status(401).json({ error: 'Invalid refresh token' });
     }
 
@@ -90,7 +95,7 @@ export const refresh = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Invalid refresh token' });
     }
 
-    const user = await findUserByEmail(decoded.email || ''); // Fallback
+    const user = await findUserById(decoded.userId);
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }

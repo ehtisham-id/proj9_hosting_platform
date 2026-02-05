@@ -1,6 +1,6 @@
 import rateLimit from 'express-rate-limit';
-import { pool, redisClient } from '../config/database.config';
-import { Request, Response, NextFunction } from 'express';
+import { redisClient } from '../config/database.config';
+import { Response, NextFunction } from 'express';
 import { AuthRequest } from './rbac.middleware';
 
 export const loginRateLimit = rateLimit({
@@ -8,8 +8,7 @@ export const loginRateLimit = rateLimit({
   max: 5,
   message: { error: 'Too many login attempts, try again later' },
   standardHeaders: true,
-  legacyHeaders: false,
-  store: redisClient as any
+  legacyHeaders: false
 });
 
 export const generalRateLimit = rateLimit({
@@ -17,8 +16,7 @@ export const generalRateLimit = rateLimit({
   max: 100,
   message: { error: 'Too many requests' },
   standardHeaders: true,
-  legacyHeaders: false,
-  store: redisClient as any
+  legacyHeaders: false
 });
 
 export const ipWhitelist = (req: AuthRequest, res: Response, next: NextFunction) => {

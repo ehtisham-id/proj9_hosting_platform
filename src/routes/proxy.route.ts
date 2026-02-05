@@ -8,7 +8,7 @@ export const proxyRouter = Router();
 proxyRouter.use(authenticateJWT);
 proxyRouter.use(generalRateLimit);
 
-proxyRouter.post('/proxy', generateProxyHandler);
-proxyRouter.get('/proxy', proxyStatusHandler);
+proxyRouter.post('/', generateProxyHandler);
+proxyRouter.get('/status', proxyStatusHandler);
 
 export default proxyRouter;

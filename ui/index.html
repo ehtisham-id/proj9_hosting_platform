@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Heroku Clone Platform</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f7f7f8;
+        color: #222;
+      }
+      .container {
+        max-width: 880px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      }
+      h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+      }
+      p {
+        margin: 8px 0;
+        line-height: 1.5;
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        margin-top: 16px;
+      }
+      .endpoint {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 13px;
+      }
+      .muted {
+        color: #6b7280;
+        font-size: 13px;
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #111827;
+        color: #fff;
+        font-size: 12px;
+        margin-left: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>Heroku Clone Backend</h1>
+        <p class="muted">
+          API is running. Use the endpoints below to explore core features.
+        </p>
+        <div class="grid">
+          <div class="endpoint">GET /health</div>
+          <div class="endpoint">POST /auth/signup</div>
+          <div class="endpoint">POST /auth/login</div>
+          <div class="endpoint">GET /apps</div>
+          <div class="endpoint">POST /apps</div>
+          <div class="endpoint">POST /apps/:id/deploy <span class="tag">protected</span></div>
+          <div class="endpoint">GET /apps/:id/logs</div>
+          <div class="endpoint">POST /apps/:id/scale</div>
+        </div>
+        <p class="muted">
+          This static page is a placeholder. You can wire it into Express static hosting
+          if you want a landing page.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

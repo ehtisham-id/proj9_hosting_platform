@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { pool, redisClient } from '../config/database.config';
+import { Response, NextFunction } from 'express';
+import { redisClient } from '../config/database.config';
 import { AuthRequest } from './rbac.middleware';
 
 export interface SecureRequest extends AuthRequest {}
@@ -25,5 +25,4 @@ export const auditTrail = async (req: SecureRequest, res: Response, next: NextFu
   
   next();
 };
-
 

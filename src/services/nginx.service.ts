@@ -1,8 +1,9 @@
-import { pool, redisClient } from '../config/database.config';
+import { pool } from '../config/database.config';
 import { getInstanceCount } from './scaling.service';
-import { dockerSandbox } from './docker.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 export interface NginxConfig {
   appId: number;
@@ -15,7 +16,6 @@ export interface NginxConfig {
 export class NginxManager {
   private static instance: NginxManager;
   private configDir = '/tmp/nginx-heroku-clone';
-  private mainConfigPath = '/tmp/nginx-heroku-clone/nginx.conf';
 
   static getInstance() {
     if (!NginxManager.instance) {
@@ -29,6 +29,7 @@ export class NginxManager {
   }
 
   async generateAppConfig(appId: number): Promise<NginxConfig> {
+    await this.init();
     const appResult = await pool.query(
       'SELECT name FROM apps WHERE id = $1',
       [appId]
@@ -40,8 +41,6 @@ export class NginxManager {
 
     const appName = appResult.rows[0].name;
     const instanceCount = await getInstanceCount(appId);
-    const containers = await dockerSandbox.getContainers(appId);
-
     // Assign dynamic ports (30000-40000 range)
     const ports: number[] = [];
     for (let i = 0; i < instanceCount; i++) {
@@ -89,36 +88,24 @@ server {
 
   async reloadNginx(): Promise<void> {
     try {
-      const { exec } = require('child_process').promisify(require('util').promisify);
-      await exec('nginx -t && nginx -s reload || echo "NGINX reload simulated"');
+      const execAsync = promisify(exec);
+      await execAsync('nginx -t && nginx -s reload || echo "NGINX reload simulated"');
     } catch (error) {
       console.log('NGINX reload simulated for development');
     }
   }
 
   async generateMainConfig(): Promise<void> {
-    const appsResult = await pool.query(
-      `SELECT id, name FROM apps WHERE status = 'running'`
-    );
-
-    const includes = appsResult.rows.map(row => 
-      `include ${this.configDir}/app-${row.id}.conf;`
-    ).join('\n');
-
-    const mainConfig = `
-events {
-  worker_connections 1024;
-}
-
-http {
-  include       /etc/nginx/mime.types;
-  default_type  application/octet-stream;
-
-  ${includes}
+    await this.init();
+    const defaultConfigPath = path.join(this.configDir, '00-default.conf');
+    const defaultConfig = `
+server {
+  listen 80 default_server;
+  server_name _;
+  return 503 'No apps deployed';
 }
 `;
-
-    await fs.writeFile(this.mainConfigPath, mainConfig);
+    await fs.writeFile(defaultConfigPath, defaultConfig);
   }
 }
 

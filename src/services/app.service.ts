@@ -1,5 +1,4 @@
 import { pool } from '../config/database.config';
-import { AuthRequest } from '../middleware/rbac.middleware';
 
 export interface CreateAppInput {
   name: string;
@@ -45,7 +44,7 @@ export const getAppById = async (appId: number): Promise<App | null> => {
   return result.rows[0] || null;
 };
 
-export const updateApp = async (appId: number, userId: number, updates: Partial<App>): Promise<App> => {
+export const updateApp = async (appId: number, userId: number, updates: Partial<App>): Promise<App | null> => {
   const fields = Object.keys(updates).map((key, i) => `${key}=$${i+1}`).join(', ');
   const values = Object.values(updates).concat([appId, userId]);
   
@@ -55,7 +54,7 @@ export const updateApp = async (appId: number, userId: number, updates: Partial<
      RETURNING *`,
     values
   );
-  return result.rows[0];
+  return result.rows[0] || null;
 };
 
 export const deleteApp = async (appId: number, userId: number): Promise<void> => {

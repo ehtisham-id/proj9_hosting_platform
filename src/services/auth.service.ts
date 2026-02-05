@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool, redisClient } from '../config/database.config';
-import { Request, Response, NextFunction } from 'express';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'heroku-clone-secret';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'heroku-clone-refresh-secret';
@@ -47,9 +46,15 @@ export const findUserByEmail = async (email: string) => {
   return result.rows[0];
 };
 
+export const findUserById = async (userId: number) => {
+  const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+  return result.rows[0];
+};
+
 export const saveRefreshToken = async (userId: number, token: string, expiresAt: Date) => {
   const tokenHash = await hashPassword(token);
-  await redisClient.set(`refresh:${userId}`, tokenHash, { EX: Math.floor(expiresAt.getTime() / 1000) });
+  const ttlSeconds = Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
+  await redisClient.set(`refresh:${userId}`, tokenHash, { EX: ttlSeconds });
 };
 
 export const verifyRefreshToken = async (userId: number, token: string) => {

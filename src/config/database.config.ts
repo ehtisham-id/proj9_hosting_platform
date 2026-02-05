@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import Redis from "redis";
+import { createClient } from "redis";
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -9,10 +9,13 @@ export const pool = new Pool({
       : false,
 });
 
-export const redisClient = Redis.createClient({
+export const redisClient = createClient({
   url: process.env.REDIS_URL,
 });
 
+redisClient.on("error", (err) => {
+  console.error("Redis error:", err);
+});
 redisClient.connect().catch(console.error);
 
 // Phase 1: Users table
@@ -53,6 +56,7 @@ export const initDb = async () => {
   ALTER TABLE apps ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'stopped';
   ALTER TABLE apps ADD COLUMN IF NOT EXISTS instances INTEGER DEFAULT 1;
   ALTER TABLE apps ADD COLUMN IF NOT EXISTS last_deployed TIMESTAMP;
+  ALTER TABLE apps ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
   
   -- Environment variables table
   CREATE TABLE IF NOT EXISTS app_env (
@@ -61,6 +65,7 @@ export const initDb = async () => {
     key VARCHAR(100) NOT NULL,
     value TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(app_id, key)
   );
 `);

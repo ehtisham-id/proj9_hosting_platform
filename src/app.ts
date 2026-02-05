@@ -2,14 +2,15 @@ import express, { Application } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 import { healthCheckRouter } from "./routes/health.route";
 import { appsRouter } from "./routes/index.route";
 import { initDb } from "./config/database.config";
 import {
-  loginRateLimit,
   generalRateLimit,
   ipBlacklist,
 } from "./middleware/security.middleware";
+import authRouter from "./routes/auth.route";
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
@@ -42,17 +43,19 @@ app.use(
   }),
 );
 app.use(morgan("combined"));
+app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check route
 app.use("/health", healthCheckRouter);
+app.use("/auth", authRouter);
 
 // Add middleware globally (except auth)
 app.use(generalRateLimit);
 app.use(ipBlacklist);
 
-app.use("/", appsRouter);
+app.use("/apps", appsRouter);
 
 app.get("/", (req, res) => {
   res.json({ message: "Heroku Clone API v1.0 - Phase 0 Complete" });

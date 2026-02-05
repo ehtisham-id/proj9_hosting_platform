@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { 
   createApp, getUserApps, getAppById, updateApp, deleteApp 
 } from '../services/app.service';

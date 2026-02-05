@@ -11,9 +11,9 @@ scalingRouter.use(authenticateJWT);
 scalingRouter.use(generalRateLimit);
 
 // Scaling endpoints
-scalingRouter.post('/scale', scaleHandler);
-scalingRouter.post('/scale/up', scaleUpHandler);
-scalingRouter.post('/scale/down', scaleDownHandler);
-scalingRouter.get('/scale', metricsHandler);
+scalingRouter.post('/', scaleHandler);
+scalingRouter.post('/up', scaleUpHandler);
+scalingRouter.post('/down', scaleDownHandler);
+scalingRouter.get('/', metricsHandler);
 
 export default scalingRouter;

@@ -42,6 +42,9 @@ export const requireRole = (roles: UserRole[]) => {
 
 export const requireAppOwnership = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const appId = parseInt(req.params.id);
+  if (isNaN(appId)) {
+    return res.status(400).json({ error: 'Invalid app id' });
+  }
   const result = await pool.query(
     'SELECT user_id FROM apps WHERE id = $1',
     [appId]
@@ -51,7 +54,7 @@ export const requireAppOwnership = async (req: AuthRequest, res: Response, next:
     return res.status(404).json({ error: 'App not found' });
   }
   
-  if (result.rows[0].user_id !== req.user!.userId) {
+  if (result.rows[0].user_id !== req.user!.userId && req.user!.role !== 'admin') {
     return res.status(403).json({ error: 'Not app owner' });
   }
   

@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
-import helmet from 'helmet';
 import { pool, redisClient } from '../config/database.config';
-import Joi from 'joi';
 const jwt = require('jsonwebtoken') as typeof import('jsonwebtoken');
 
 export interface SecureRequest extends Request {
@@ -18,8 +16,7 @@ export const createRateLimit = (windowMs: number, max: number, prefix: string) =
     message: { error: 'Rate limit exceeded' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req: SecureRequest) => `${prefix}:${req.user?.userId || req.ip}`,
-    store: redisClient as any
+    keyGenerator: (req: SecureRequest) => `${prefix}:${req.user?.userId || req.ip}`
   });
 
 export const authRateLimit = createRateLimit(15 * 60 * 1000, 5, 'auth');
@@ -92,4 +89,3 @@ function verifyAccessToken(token: string): { userId: number; role?: string } | n
     return null;
   }
 }
-

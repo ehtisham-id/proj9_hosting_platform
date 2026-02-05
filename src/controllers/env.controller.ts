@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { 
   createEnvVar, getAppEnvVars, updateEnvVar, deleteEnvVar 
 } from '../services/env.service';

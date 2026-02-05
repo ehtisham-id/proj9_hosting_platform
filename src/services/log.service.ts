@@ -32,7 +32,7 @@ export const getAppLogs = async (
     FROM app_logs 
     WHERE app_id = $1 ${since ? 'AND timestamp > $2' : ''}
     ORDER BY timestamp DESC 
-    LIMIT $3
+    LIMIT ${since ? '$3' : '$2'}
   `;
   const params = since ? [appId, since, limit] : [appId, limit];
   
@@ -48,7 +48,7 @@ export const clearOldLogs = async (appId: number, days: number = 7): Promise<voi
   await pool.query(
     `DELETE FROM app_logs 
      WHERE app_id = $1 
-     AND timestamp < NOW() - INTERVAL '${days} days'`,
-    [appId]
+     AND timestamp < NOW() - ($2 * INTERVAL '1 day')`,
+    [appId, days]
   );
 };

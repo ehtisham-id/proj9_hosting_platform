@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { getAppLogs, getRecentLogs } from '../services/log.service';
 import { AuthRequest } from '../middleware/rbac.middleware';
 import { pool } from '../config/database.config';

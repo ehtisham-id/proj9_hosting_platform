@@ -1,6 +1,6 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import { pool, redisClient } from "../config/database.config";
+import { redisClient } from "../config/database.config";
 import { saveLog } from "./log.service";
 
 const execAsync = promisify(exec);
