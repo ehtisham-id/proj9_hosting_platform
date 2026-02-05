@@ -1,90 +1,1724 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Heroku Clone Platform</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heroku Clone API Client</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <style>
-      :root {
-        color-scheme: light;
-      }
-      body {
-        margin: 0;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: #f7f7f8;
-        color: #222;
-      }
-      .container {
-        max-width: 880px;
-        margin: 40px auto;
-        padding: 0 20px;
-      }
-      .card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-      }
-      h1 {
-        margin: 0 0 8px 0;
-        font-size: 28px;
-      }
-      p {
-        margin: 8px 0;
-        line-height: 1.5;
-      }
-      .grid {
-        display: grid;
-        gap: 12px;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        margin-top: 16px;
-      }
-      .endpoint {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 12px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        font-size: 13px;
-      }
-      .muted {
-        color: #6b7280;
-        font-size: 13px;
-      }
-      .tag {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: #111827;
-        color: #fff;
-        font-size: 12px;
-        margin-left: 6px;
-      }
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d1b3d 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .navbar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .container-fluid {
+            display: flex;
+            height: calc(100vh - 70px);
+            padding: 0;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border);
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .sidebar-item {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
+        }
+
+        .sidebar-item.active {
+            background: var(--primary-gradient);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .method-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .method-get { background: #10b981; color: white; }
+        .method-post { background: #3b82f6; color: white; }
+        .method-put { background: #f59e0b; color: white; }
+        .method-delete { background: #ef4444; color: white; }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .endpoint-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #d1d5db;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .response-panel {
+            margin-top: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .status-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .status-success { background: #10b981; color: white; }
+        .status-error { background: #ef4444; color: white; }
+        .status-info { background: #3b82f6; color: white; }
+
+        .response-body {
+            background: #1a1a2e;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #22c55e;
+        }
+
+        .toast {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast-success { background: #10b981; }
+        .toast-error { background: #ef4444; }
+
+        .auth-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.2);
+            border-radius: 6px;
+            border: 1px solid #10b981;
+        }
+
+        .auth-indicator.logged-out {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .input-group .form-input {
+            flex: 1;
+        }
+
+        .json-key { color: #8b5cf6; }
+        .json-string { color: #22c55e; }
+        .json-number { color: #f59e0b; }
+        .json-boolean { color: #3b82f6; }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.7);
+        }
+
+        .env-var-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .env-var-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .file-upload-zone {
+            border: 2px dashed var(--glass-border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-zone:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="card">
-        <h1>Heroku Clone Backend</h1>
-        <p class="muted">
-          API is running. Use the endpoints below to explore core features.
-        </p>
-        <div class="grid">
-          <div class="endpoint">GET /health</div>
-          <div class="endpoint">POST /auth/signup</div>
-          <div class="endpoint">POST /auth/login</div>
-          <div class="endpoint">GET /apps</div>
-          <div class="endpoint">POST /apps</div>
-          <div class="endpoint">POST /apps/:id/deploy <span class="tag">protected</span></div>
-          <div class="endpoint">GET /apps/:id/logs</div>
-          <div class="endpoint">POST /apps/:id/scale</div>
+</head>
+<body x-data="apiClient()">
+    <nav class="navbar">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="navbar-brand">
+                <i class="fas fa-rocket"></i> Heroku Clone API Client
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <label style="font-size: 0.85rem; color: #9ca3af;">Base URL:</label>
+                    <input type="text" x-model="baseUrl" class="form-input" style="width: 250px;" placeholder="http://localhost:3000">
+                </div>
+                <div :class="token ? 'auth-indicator' : 'auth-indicator logged-out'">
+                    <i :class="token ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                    <span x-text="token ? 'Authenticated' : 'Not Authenticated'"></span>
+                </div>
+                <button @click="logout()" x-show="token" class="btn btn-secondary" style="padding: 0.5rem 1rem;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
         </div>
-        <p class="muted">
-          This static page is a placeholder. You can wire it into Express static hosting
-          if you want a landing page.
-        </p>
-      </div>
+    </nav>
+
+    <div class="container-fluid">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Base & Health</div>
+                <div class="sidebar-item" :class="currentEndpoint === 'base' && 'active'" @click="selectEndpoint('base')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'health' && 'active'" @click="selectEndpoint('health')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/health</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Authentication</div>
+                <div class="sidebar-item" :class="currentEndpoint === 'signup' && 'active'" @click="selectEndpoint('signup')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/auth/signup</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'login' && 'active'" @click="selectEndpoint('login')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/auth/login</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'refresh' && 'active'" @click="selectEndpoint('refresh')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/auth/refresh</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'logout' && 'active'" @click="selectEndpoint('logout')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/auth/logout</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Apps</div>
+                <div class="sidebar-item" :class="currentEndpoint === 'getApps' && 'active'" @click="selectEndpoint('getApps')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/apps</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'createApp' && 'active'" @click="selectEndpoint('createApp')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/apps</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'getApp' && 'active'" @click="selectEndpoint('getApp')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/apps/:id</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'updateApp' && 'active'" @click="selectEndpoint('updateApp')">
+                    <span class="method-badge method-put">PUT</span>
+                    <span>/apps/:id</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'deleteApp' && 'active'" @click="selectEndpoint('deleteApp')">
+                    <span class="method-badge method-delete">DEL</span>
+                    <span>/apps/:id</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Environment Variables</div>
+                <div class="sidebar-item" :class="currentEndpoint === 'getEnv' && 'active'" @click="selectEndpoint('getEnv')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/apps/:id/env</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'createEnv' && 'active'" @click="selectEndpoint('createEnv')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/apps/:id/env</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'updateEnv' && 'active'" @click="selectEndpoint('updateEnv')">
+                    <span class="method-badge method-put">PUT</span>
+                    <span>/apps/:id/env/:key</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'deleteEnv' && 'active'" @click="selectEndpoint('deleteEnv')">
+                    <span class="method-badge method-delete">DEL</span>
+                    <span>/apps/:id/env/:key</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Logs</div>
+                <div class="sidebar-item" :class="currentEndpoint === 'getLogs' && 'active'" @click="selectEndpoint('getLogs')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/apps/:id/logs</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'streamLogs' && 'active'" @click="selectEndpoint('streamLogs')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/apps/:id/logs/stream</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Scaling</div>
+                <div class="sidebar-item" :class="currentEndpoint === 'scale' && 'active'" @click="selectEndpoint('scale')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/apps/:id/scale</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'scaleUp' && 'active'" @click="selectEndpoint('scaleUp')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/apps/:id/scale/up</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'scaleDown' && 'active'" @click="selectEndpoint('scaleDown')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/apps/:id/scale/down</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'getScale' && 'active'" @click="selectEndpoint('getScale')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/apps/:id/scale</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Deployment</div>
+                <div class="sidebar-item" :class="currentEndpoint === 'deploy' && 'active'" @click="selectEndpoint('deploy')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/apps/:id/deploy</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'stop' && 'active'" @click="selectEndpoint('stop')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/apps/:id/stop</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'getContainers' && 'active'" @click="selectEndpoint('getContainers')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/apps/:id/containers</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Proxy / NGINX</div>
+                <div class="sidebar-item" :class="currentEndpoint === 'createProxy' && 'active'" @click="selectEndpoint('createProxy')">
+                    <span class="method-badge method-post">POST</span>
+                    <span>/apps/:id/proxy</span>
+                </div>
+                <div class="sidebar-item" :class="currentEndpoint === 'getProxyStatus' && 'active'" @click="selectEndpoint('getProxyStatus')">
+                    <span class="method-badge method-get">GET</span>
+                    <span>/apps/:id/proxy/status</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div x-show="currentEndpoint === 'base'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Base endpoint returning API version information.</p>
+                <div class="btn-group">
+                    <button @click="sendRequest('GET', '/')" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'health'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/health</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Health check endpoint.</p>
+                <div class="btn-group">
+                    <button @click="sendRequest('GET', '/health')" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'signup'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/auth/signup</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Register a new user account.</p>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" x-model="forms.signup.email" class="form-input" placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" x-model="forms.signup.password" class="form-input" placeholder="Enter password">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('POST', '/auth/signup', forms.signup)" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('signup')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('signup')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'login'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/auth/login</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Authenticate user and receive access token.</p>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" x-model="forms.login.email" class="form-input" placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" x-model="forms.login.password" class="form-input" placeholder="Enter password">
+                </div>
+                <div class="btn-group">
+                    <button @click="login()" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button @click="loadExample('login')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('login')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'refresh'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/auth/refresh</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Refresh access token using refresh token cookie.</p>
+                <div class="btn-group">
+                    <button @click="sendRequest('POST', '/auth/refresh')" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'logout'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/auth/logout</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Logout and clear refresh token.</p>
+                <div class="btn-group">
+                    <button @click="sendRequest('POST', '/auth/logout')" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'getApps'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/apps</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Get all apps for authenticated user.</p>
+                <div class="btn-group">
+                    <button @click="sendRequest('GET', '/apps')" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'createApp'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/apps</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Create a new application.</p>
+                <div class="form-group">
+                    <label class="form-label">App Name</label>
+                    <input type="text" x-model="forms.createApp.name" class="form-input" placeholder="my-app">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('POST', '/apps', forms.createApp)" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('createApp')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('createApp')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'getApp'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/apps/:id</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Get a specific app by ID.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.getApp.id" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('GET', `/apps/${forms.getApp.id}`)" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('getApp')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('getApp')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'updateApp'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-put">PUT</span>
+                    <div class="endpoint-url">/apps/:id</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Update an application.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.updateApp.id" class="form-input" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Name (optional)</label>
+                    <input type="text" x-model="forms.updateApp.name" class="form-input" placeholder="updated-app-name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status (optional)</label>
+                    <select x-model="forms.updateApp.status" class="form-input">
+                        <option value="">-- Select Status --</option>
+                        <option value="stopped">Stopped</option>
+                        <option value="running">Running</option>
+                        <option value="restarting">Restarting</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button @click="updateApp()" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('updateApp')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('updateApp')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'deleteApp'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-delete">DELETE</span>
+                    <div class="endpoint-url">/apps/:id</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Delete an application.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.deleteApp.id" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('DELETE', `/apps/${forms.deleteApp.id}`)" class="btn btn-primary">
+                        <i class="fas fa-trash"></i> Delete App
+                    </button>
+                    <button @click="loadExample('deleteApp')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('deleteApp')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'getEnv'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/apps/:id/env</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Get all environment variables for an app.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.getEnv.id" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="getEnvRequest()" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('getEnv')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('getEnv')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'createEnv'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/apps/:id/env</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Create a new environment variable. Key must match pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.createEnv.id" class="form-input" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key</label>
+                    <input type="text" x-model="forms.createEnv.key" class="form-input" placeholder="DATABASE_URL">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Value</label>
+                    <input type="text" x-model="forms.createEnv.value" class="form-input" placeholder="postgres://...">
+                </div>
+                <div class="btn-group">
+                    <button @click="createEnvRequest()" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('createEnv')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('createEnv')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'updateEnv'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-put">PUT</span>
+                    <div class="endpoint-url">/apps/:id/env/:key</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Update an existing environment variable.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.updateEnv.id" class="form-input" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key</label>
+                    <input type="text" x-model="forms.updateEnv.key" class="form-input" placeholder="DATABASE_URL">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">New Value</label>
+                    <input type="text" x-model="forms.updateEnv.value" class="form-input" placeholder="postgres://...">
+                </div>
+                <div class="btn-group">
+                    <button @click="updateEnvRequest()" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('updateEnv')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('updateEnv')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'deleteEnv'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-delete">DELETE</span>
+                    <div class="endpoint-url">/apps/:id/env/:key</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Delete an environment variable.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.deleteEnv.id" class="form-input" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key</label>
+                    <input type="text" x-model="forms.deleteEnv.key" class="form-input" placeholder="DATABASE_URL">
+                </div>
+                <div class="btn-group">
+                    <button @click="deleteEnvRequest()" class="btn btn-primary">
+                        <i class="fas fa-trash"></i> Delete Env Var
+                    </button>
+                    <button @click="loadExample('deleteEnv')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('deleteEnv')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'getLogs'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/apps/:id/logs</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Get application logs with optional filters.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.getLogs.id" class="form-input" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Limit (default: 100)</label>
+                    <input type="number" x-model="forms.getLogs.limit" class="form-input" placeholder="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Since (ISO date, optional)</label>
+                    <input type="text" x-model="forms.getLogs.since" class="form-input" placeholder="2025-01-01T00:00:00Z">
+                </div>
+                <div class="btn-group">
+                    <button @click="getLogsRequest()" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('getLogs')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('getLogs')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'streamLogs'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/apps/:id/logs/stream</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Stream logs in real-time (SSE).</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.streamLogs.id" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="streamLogsRequest()" class="btn btn-primary">
+                        <i class="fas fa-stream"></i> Start Stream
+                    </button>
+                    <button @click="stopLogStream()" class="btn btn-secondary" x-show="streaming">
+                        <i class="fas fa-stop"></i> Stop Stream
+                    </button>
+                    <button @click="loadExample('streamLogs')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('streamLogs')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'scale'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/apps/:id/scale</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Scale app to specific number of instances (1-20).</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.scale.id" class="form-input" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Instances (1-20)</label>
+                    <input type="number" x-model="forms.scale.instances" class="form-input" placeholder="3" min="1" max="20">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('POST', `/apps/${forms.scale.id}/scale`, {instances: parseInt(forms.scale.instances)})" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('scale')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('scale')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'scaleUp'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/apps/:id/scale/up</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Scale up by specified increment (default: 1).</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.scaleUp.id" class="form-input" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Increment (default: 1)</label>
+                    <input type="number" x-model="forms.scaleUp.increment" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="scaleUpRequest()" class="btn btn-primary">
+                        <i class="fas fa-arrow-up"></i> Scale Up
+                    </button>
+                    <button @click="loadExample('scaleUp')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('scaleUp')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'scaleDown'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/apps/:id/scale/down</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Scale down by specified decrement (default: 1).</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.scaleDown.id" class="form-input" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Decrement (default: 1)</label>
+                    <input type="number" x-model="forms.scaleDown.decrement" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="scaleDownRequest()" class="btn btn-primary">
+                        <i class="fas fa-arrow-down"></i> Scale Down
+                    </button>
+                    <button @click="loadExample('scaleDown')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('scaleDown')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'getScale'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/apps/:id/scale</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Get current scaling metrics.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.getScale.id" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('GET', `/apps/${forms.getScale.id}/scale`)" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('getScale')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('getScale')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'deploy'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/apps/:id/deploy</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Deploy an application with optional instances and env vars.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.deploy.id" class="form-input" placeholder="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Instances (1-10, optional)</label>
+                    <input type="number" x-model="forms.deploy.instances" class="form-input" placeholder="2" min="1" max="10">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Environment Variables (JSON, optional)</label>
+                    <textarea x-model="forms.deploy.env_vars" class="form-textarea" rows="4" placeholder='{"PORT": "3000", "NODE_ENV": "production"}'></textarea>
+                </div>
+                <div class="btn-group">
+                    <button @click="deployRequest()" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Deploy
+                    </button>
+                    <button @click="loadExample('deploy')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('deploy')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'stop'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/apps/:id/stop</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Stop a running application.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.stop.id" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('POST', `/apps/${forms.stop.id}/stop`)" class="btn btn-primary">
+                        <i class="fas fa-stop"></i> Stop App
+                    </button>
+                    <button @click="loadExample('stop')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('stop')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'getContainers'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/apps/:id/containers</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Get all containers for an application.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.getContainers.id" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('GET', `/apps/${forms.getContainers.id}/containers`)" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('getContainers')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('getContainers')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'createProxy'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <div class="endpoint-url">/apps/:id/proxy</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Create NGINX proxy configuration for the app.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.createProxy.id" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('POST', `/apps/${forms.createProxy.id}/proxy`)" class="btn btn-primary">
+                        <i class="fas fa-network-wired"></i> Create Proxy
+                    </button>
+                    <button @click="loadExample('createProxy')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('createProxy')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="currentEndpoint === 'getProxyStatus'" class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-get">GET</span>
+                    <div class="endpoint-url">/apps/:id/proxy/status</div>
+                </div>
+                <p style="margin-bottom: 1rem; color: #9ca3af;">Get proxy configuration status.</p>
+                <div class="form-group">
+                    <label class="form-label">App ID</label>
+                    <input type="number" x-model="forms.getProxyStatus.id" class="form-input" placeholder="1">
+                </div>
+                <div class="btn-group">
+                    <button @click="sendRequest('GET', `/apps/${forms.getProxyStatus.id}/proxy/status`)" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
+                    <button @click="loadExample('getProxyStatus')" class="btn btn-secondary">
+                        <i class="fas fa-file-import"></i> Load Example
+                    </button>
+                    <button @click="resetForm('getProxyStatus')" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div x-show="response" class="response-panel">
+                    <div class="response-header">
+                        <span style="font-weight: 600;">Response</span>
+                        <span class="status-badge" :class="responseStatus < 300 ? 'status-success' : 'status-error'" x-text="'Status: ' + responseStatus"></span>
+                    </div>
+                    <div class="response-body">
+                        <pre x-html="formatJson(response)"></pre>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-  </body>
+
+    <script>
+        function apiClient() {
+            return {
+                baseUrl: 'http://localhost:3000',
+                token: localStorage.getItem('token') || '',
+                currentEndpoint: 'base',
+                response: null,
+                responseStatus: null,
+                forms: {
+                    signup: { email: '', password: '' },
+                    login: { email: '', password: '' },
+                    createApp: { name: '' },
+                    getApp: { id: '' },
+                    updateApp: { id: '', name: '', status: '' },
+                    deleteApp: { id: '' },
+                    getEnv: { id: '' },
+                    createEnv: { id: '', key: '', value: '' },
+                    updateEnv: { id: '', key: '', value: '' },
+                    deleteEnv: { id: '', key: '' },
+                    getLogs: { id: '', limit: 100, since: '' },
+                    streamLogs: { id: '' },
+                    scale: { id: '', instances: 1 },
+                    scaleUp: { id: '', increment: 1 },
+                    scaleDown: { id: '', decrement: 1 },
+                    getScale: { id: '' },
+                    deploy: { id: '', instances: '', env_vars: '' },
+                    stop: { id: '' },
+                    getContainers: { id: '' },
+                    createProxy: { id: '' },
+                    getProxyStatus: { id: '' }
+                },
+                streaming: false,
+                streamController: null,
+                streamBuffer: '',
+                examples: {
+                    signup: { email: 'test@example.com', password: 'password123' },
+                    login: { email: 'test@example.com', password: 'password123' },
+                    createApp: { name: 'my-awesome-app' },
+                    getApp: { id: 1 },
+                    updateApp: { id: 1, name: 'updated-app', status: 'running' },
+                    deleteApp: { id: 1 },
+                    getEnv: { id: 1 },
+                    createEnv: { id: 1, key: 'DATABASE_URL', value: 'postgres://localhost/mydb' },
+                    updateEnv: { id: 1, key: 'DATABASE_URL', value: 'postgres://localhost/newdb' },
+                    deleteEnv: { id: 1, key: 'DATABASE_URL' },
+                    getLogs: { id: 1, limit: 100, since: '' },
+                    streamLogs: { id: 1 },
+                    scale: { id: 1, instances: 3 },
+                    scaleUp: { id: 1, increment: 2 },
+                    scaleDown: { id: 1, decrement: 1 },
+                    getScale: { id: 1 },
+                    deploy: { id: 1, instances: 2, env_vars: '{"PORT": "3000", "NODE_ENV": "production"}' },
+                    stop: { id: 1 },
+                    getContainers: { id: 1 },
+                    createProxy: { id: 1 },
+                    getProxyStatus: { id: 1 }
+                },
+
+                selectEndpoint(endpoint) {
+                    this.currentEndpoint = endpoint;
+                    this.response = null;
+                    this.responseStatus = null;
+                },
+
+                async sendRequest(method, url, data = null) {
+                    try {
+                        const config = {
+                            method,
+                            url: this.baseUrl + url,
+                            headers: {}
+                        };
+
+                        if (this.token) {
+                            config.headers.Authorization = `Bearer ${this.token}`;
+                        }
+
+                        if (data) {
+                            config.data = data;
+                            config.headers['Content-Type'] = 'application/json';
+                        }
+
+                        const response = await axios(config);
+                        this.response = response.data;
+                        this.responseStatus = response.status;
+                        this.showToast('Request successful', 'success');
+                    } catch (error) {
+                        this.response = error.response?.data || { error: error.message };
+                        this.responseStatus = error.response?.status || 500;
+                        this.showToast('Request failed', 'error');
+                    }
+                },
+
+                async login() {
+                    try {
+                        const response = await axios.post(this.baseUrl + '/auth/login', this.forms.login);
+                        this.token = response.data.accessToken;
+                        localStorage.setItem('token', this.token);
+                        this.response = response.data;
+                        this.responseStatus = response.status;
+                        this.showToast('Login successful', 'success');
+                    } catch (error) {
+                        this.response = error.response?.data || { error: error.message };
+                        this.responseStatus = error.response?.status || 500;
+                        this.showToast('Login failed', 'error');
+                    }
+                },
+
+                logout() {
+                    this.token = '';
+                    localStorage.removeItem('token');
+                    this.showToast('Logged out', 'success');
+                },
+
+                async updateApp() {
+                    const { id, name, status } = this.forms.updateApp;
+                    const payload = {};
+                    if (name) payload.name = name;
+                    if (status) payload.status = status;
+                    await this.sendRequest('PUT', `/apps/${id}`, payload);
+                },
+
+                async getLogsRequest() {
+                    const { id, limit, since } = this.forms.getLogs;
+                    if (!this.requireAppId(id)) return;
+                    let url = `/apps/${id}/logs?limit=${limit || 100}`;
+                    if (since) url += `&since=${since}`;
+                    await this.sendRequest('GET', url);
+                },
+
+                requireAppId(id) {
+                    if (!id) {
+                        this.showToast('App ID is required', 'error');
+                        return false;
+                    }
+                    return true;
+                },
+
+                async getEnvRequest() {
+                    const { id } = this.forms.getEnv;
+                    if (!this.requireAppId(id)) return;
+                    await this.sendRequest('GET', `/apps/${id}/env`);
+                },
+
+                async createEnvRequest() {
+                    const { id, key, value } = this.forms.createEnv;
+                    if (!this.requireAppId(id)) return;
+                    if (!key || !value) {
+                        this.showToast('Key and value are required', 'error');
+                        return;
+                    }
+                    await this.sendRequest('POST', `/apps/${id}/env`, { key, value });
+                },
+
+                async updateEnvRequest() {
+                    const { id, key, value } = this.forms.updateEnv;
+                    if (!this.requireAppId(id)) return;
+                    if (!key || !value) {
+                        this.showToast('Key and value are required', 'error');
+                        return;
+                    }
+                    await this.sendRequest('PUT', `/apps/${id}/env/${key}`, { value });
+                },
+
+                async deleteEnvRequest() {
+                    const { id, key } = this.forms.deleteEnv;
+                    if (!this.requireAppId(id)) return;
+                    if (!key) {
+                        this.showToast('Key is required', 'error');
+                        return;
+                    }
+                    await this.sendRequest('DELETE', `/apps/${id}/env/${key}`);
+                },
+
+                async streamLogsRequest() {
+                    const { id } = this.forms.streamLogs;
+                    if (!id) {
+                        this.showToast('App ID is required', 'error');
+                        return;
+                    }
+
+                    // Stop any existing stream
+                    this.stopLogStream();
+
+                    this.streaming = true;
+                    this.streamBuffer = '';
+                    this.response = { stream: 'Starting log stream...\n' };
+                    this.responseStatus = 200;
+
+                    const url = `${this.baseUrl}/apps/${id}/logs/stream`;
+                    const headers = {};
+                    if (this.token) {
+                        headers['Authorization'] = `Bearer ${this.token}`;
+                    }
+
+                    const controller = new AbortController();
+                    this.streamController = controller;
+
+                    try {
+                        const res = await fetch(url, {
+                            method: 'GET',
+                            headers,
+                            signal: controller.signal
+                        });
+
+                        if (!res.ok || !res.body) {
+                            const text = await res.text();
+                            this.response = { error: text || 'Stream request failed' };
+                            this.responseStatus = res.status;
+                            this.streaming = false;
+                            return;
+                        }
+
+                        const reader = res.body.getReader();
+                        const decoder = new TextDecoder();
+
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) break;
+                            this.streamBuffer += decoder.decode(value, { stream: true });
+                            this.response = { stream: this.streamBuffer };
+                        }
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            this.response = { error: error.message };
+                            this.responseStatus = 500;
+                        }
+                    } finally {
+                        this.streaming = false;
+                        this.streamController = null;
+                    }
+                },
+
+                stopLogStream() {
+                    if (this.streamController) {
+                        this.streamController.abort();
+                        this.streamController = null;
+                    }
+                    this.streaming = false;
+                },
+
+                async scaleUpRequest() {
+                    const { id, increment } = this.forms.scaleUp;
+                    let url = `/apps/${id}/scale/up`;
+                    if (increment) url += `?increment=${increment}`;
+                    await this.sendRequest('POST', url);
+                },
+
+                async scaleDownRequest() {
+                    const { id, decrement } = this.forms.scaleDown;
+                    let url = `/apps/${id}/scale/down`;
+                    if (decrement) url += `?decrement=${decrement}`;
+                    await this.sendRequest('POST', url);
+                },
+
+                async deployRequest() {
+                    const { id, instances, env_vars } = this.forms.deploy;
+                    const payload = {};
+                    if (instances) payload.instances = parseInt(instances);
+                    if (env_vars) {
+                        try {
+                            payload.env_vars = JSON.parse(env_vars);
+                        } catch (e) {
+                            this.showToast('Invalid JSON in env_vars', 'error');
+                            return;
+                        }
+                    }
+                    await this.sendRequest('POST', `/apps/${id}/deploy`, payload);
+                },
+
+                loadExample(formName) {
+                    if (this.examples[formName]) {
+                        this.forms[formName] = { ...this.examples[formName] };
+                        this.showToast('Example loaded', 'success');
+                    }
+                },
+
+                resetForm(formName) {
+                    const defaults = {
+                        signup: { email: '', password: '' },
+                        login: { email: '', password: '' },
+                        createApp: { name: '' },
+                        getApp: { id: '' },
+                        updateApp: { id: '', name: '', status: '' },
+                        deleteApp: { id: '' },
+                        getEnv: { id: '' },
+                        createEnv: { id: '', key: '', value: '' },
+                        updateEnv: { id: '', key: '', value: '' },
+                        deleteEnv: { id: '', key: '' },
+                        getLogs: { id: '', limit: 100, since: '' },
+                        streamLogs: { id: '' },
+                        scale: { id: '', instances: 1 },
+                        scaleUp: { id: '', increment: 1 },
+                        scaleDown: { id: '', decrement: 1 },
+                        getScale: { id: '' },
+                        deploy: { id: '', instances: '', env_vars: '' },
+                        stop: { id: '' },
+                        getContainers: { id: '' },
+                        createProxy: { id: '' },
+                        getProxyStatus: { id: '' }
+                    };
+                    if (defaults[formName]) {
+                        this.forms[formName] = { ...defaults[formName] };
+                        this.showToast('Form reset', 'success');
+                    }
+                },
+
+                formatJson(obj) {
+                    if (!obj) return '';
+                    const json = JSON.stringify(obj, null, 2);
+                    return json
+                        .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+                        .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+                        .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
+                        .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
+                },
+
+                showToast(message, type) {
+                    const toast = document.createElement('div');
+                    toast.className = `toast toast-${type}`;
+                    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.animation = 'slideIn 0.3s ease reverse';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                }
+            };
+        }
+    </script>
+</body>
 </html>

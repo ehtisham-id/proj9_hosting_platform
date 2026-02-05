@@ -4,9 +4,19 @@ import { AuthRequest } from '../middleware/rbac.middleware';
 import { pool } from '../config/database.config';
 import { startLogSimulation, stopLogSimulation } from '../services/log.simulator';
 
+const parseAppId = (req: AuthRequest, res: Response): number | null => {
+  const appId = parseInt(req.params.id);
+  if (isNaN(appId)) {
+    res.status(400).json({ error: 'Invalid app id' });
+    return null;
+  }
+  return appId;
+};
+
 export const getLogsHandler = async (req: AuthRequest, res: Response) => {
   try {
-    const appId = parseInt(req.params.id);
+    const appId = parseAppId(req, res);
+    if (appId === null) return;
     const limit = parseInt(req.query.limit as string) || 100;
     const since = req.query.since ? new Date(req.query.since as string) : undefined;
 
@@ -37,7 +47,8 @@ export const getLogsHandler = async (req: AuthRequest, res: Response) => {
 };
 
 export const streamLogsHandler = async (req: AuthRequest, res: Response) => {
-  const appId = parseInt(req.params.id);
+  const appId = parseAppId(req, res);
+  if (appId === null) return;
   
   // Verify ownership (same as above)
   const appResult = await pool.query('SELECT user_id FROM apps WHERE id = $1', [appId]);

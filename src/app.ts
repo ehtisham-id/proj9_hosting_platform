@@ -36,9 +36,29 @@ app.use(
   }),
 );
 
+const rawFrontendUrls = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || "http://localhost:3001";
+const allowedOrigins = rawFrontendUrls
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3001",
+    origin: (origin, callback) => {
+      // Allow non-browser or same-origin requests
+      if (!origin) return callback(null, true);
+
+      // In development, be permissive to avoid local tooling CORS issues
+      if (process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );

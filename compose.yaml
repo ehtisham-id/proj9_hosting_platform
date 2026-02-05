@@ -12,8 +12,7 @@ services:
       - postgres
       - redis
     volumes:
-      - ./src:/app
-      - /app/node_modules
+      - ./src:/app/src
       - nginx_config:/tmp/nginx-heroku-clone
 
   postgres:

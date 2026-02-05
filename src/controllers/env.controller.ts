@@ -6,6 +6,15 @@ import { AuthRequest } from '../middleware/rbac.middleware';
 import Joi from 'joi';
 import { pool } from '../config/database.config';
 
+const parseAppId = (req: AuthRequest, res: Response): number | null => {
+  const appId = parseInt(req.params.id);
+  if (isNaN(appId)) {
+    res.status(400).json({ error: 'Invalid app id' });
+    return null;
+  }
+  return appId;
+};
+
 const envVarSchema = Joi.object({
   key: Joi.string().min(1).max(100).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).required()
     .messages({ 'string.pattern.base': 'Key must be alphanumeric with underscores, starting with letter' }),
@@ -23,7 +32,8 @@ export const createEnvHandler = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const appId = parseInt(req.params.id);
+    const appId = parseAppId(req, res);
+    if (appId === null) return;
     
     // Verify app ownership
     const appResult = await pool.query(
@@ -54,7 +64,8 @@ export const createEnvHandler = async (req: AuthRequest, res: Response) => {
 
 export const listEnvHandler = async (req: AuthRequest, res: Response) => {
   try {
-    const appId = parseInt(req.params.id);
+    const appId = parseAppId(req, res);
+    if (appId === null) return;
     
     // Verify app ownership
     const appResult = await pool.query(
@@ -80,7 +91,8 @@ export const updateEnvHandler = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const appId = parseInt(req.params.id);
+    const appId = parseAppId(req, res);
+    if (appId === null) return;
     const key = req.params.key;
     
     // Verify app ownership
@@ -106,7 +118,8 @@ export const updateEnvHandler = async (req: AuthRequest, res: Response) => {
 
 export const deleteEnvHandler = async (req: AuthRequest, res: Response) => {
   try {
-    const appId = parseInt(req.params.id);
+    const appId = parseAppId(req, res);
+    if (appId === null) return;
     const key = req.params.key;
     
     // Verify app ownership
