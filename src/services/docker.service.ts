@@ -1,7 +1,7 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { pool, redisClient } from '../config/database.config';
-import { saveLog } from './log.service';
+import { exec } from "child_process";
+import { promisify } from "util";
+import { pool, redisClient } from "../config/database.config";
+import { saveLog } from "./log.service";
 
 const execAsync = promisify(exec);
 
@@ -23,7 +23,11 @@ class DockerSandbox {
     return DockerSandbox.instance;
   }
 
-  async deployApp(appId: number, instances: number = 1, envVars: Record<string, string> = {}) {
+  async deployApp(
+    appId: number,
+    instances: number = 1,
+    envVars: Record<string, string> = {},
+  ) {
     const redisKey = `app:${appId}:deployed`;
     const isDeployed = await redisClient.get(redisKey);
     if (isDeployed) {
@@ -31,11 +35,11 @@ class DockerSandbox {
     }
 
     const containerIds: string[] = [];
-    
+
     for (let i = 0; i < instances; i++) {
       const instanceId = `app-${appId}-instance-${i}`;
       const containerName = `heroku-clone-${instanceId}`;
-      
+
       // Strict security constraints
       const cmd = `
         docker run -d \
@@ -48,26 +52,38 @@ class DockerSandbox {
           --read-only \
           --tmpfs /tmp:size=64m \
           -e PORT=8080 \
-          ${Object.entries(envVars).map(([k,v]) => `-e ${k}=${v.replace(/"/g, '\\"')}`).join(' ')} \
+          ${Object.entries(envVars)
+            .map(([k, v]) => `-e ${k}=${v.replace(/"/g, '\\"')}`)
+            .join(" ")} \
           node:20-alpine \
           sh -c "while true; do echo '[\$(date)] [STDOUT] Simulated app running...'; sleep 2; done"
       `;
-      
+
       try {
         const { stdout } = await execAsync(cmd);
         const containerId = stdout.trim();
         containerIds.push(containerId);
-        
+
         // Log deployment
-        await saveLog(appId, 'stdout', `Instance ${i+1}/${instances} deployed: ${containerId.slice(0,12)}`, instanceId);
+        await saveLog(
+          appId,
+          "stdout",
+          `Instance ${i + 1}/${instances} deployed: ${containerId.slice(0, 12)}`,
+          instanceId,
+        );
       } catch (error) {
         console.error(`Failed to deploy instance ${i}:`, error);
-        await saveLog(appId, 'stderr', `Failed to deploy instance ${i}: ${error}`, instanceId);
+        await saveLog(
+          appId,
+          "stderr",
+          `Failed to deploy instance ${i}: ${error}`,
+          instanceId,
+        );
       }
     }
-    
+
     this.containers.set(appId, containerIds);
-    await redisClient.set(redisKey, 'true', { EX: 86400 }); // 24h TTL
+    await redisClient.set(redisKey, "true", { EX: 86400 }); // 24h TTL
     return containerIds.length;
   }
 
@@ -88,12 +104,19 @@ class DockerSandbox {
   async getContainers(appId: number): Promise<ContainerInfo[]> {
     const containers: ContainerInfo[] = [];
     const containerIds = this.containers.get(appId) || [];
-    
+
     for (const containerId of containerIds) {
       try {
-        const { stdout } = await execAsync(`docker inspect ${containerId} --format '{{json .State.Status}},{{json .Name}}'`);
-        const [status, name] = stdout.trim().split(',');
-        containers.push({ id: containerId, name: name.replace(/"/g, ''), status: status.replace(/"/g, ''), ports: '' });
+        const { stdout } = await execAsync(
+          `docker inspect ${containerId} --format '{{json .State.Status}},{{json .Name}}'`,
+        );
+        const [status, name] = stdout.trim().split(",");
+        containers.push({
+          id: containerId,
+          name: name.replace(/"/g, ""),
+          status: status.replace(/"/g, ""),
+          ports: "",
+        });
       } catch (error) {}
     }
     return containers;
@@ -102,10 +125,14 @@ class DockerSandbox {
 
 export const dockerSandbox = DockerSandbox.getInstance();
 
-
 // Enhanced Docker security constraints: build a secure docker run command from inputs
-export function buildSecureRunCmd(containerName: string, envVars: Record<string, string> = {}): string {
-  const envString = Object.entries(envVars).map(([k, v]) => `-e ${k}=${v.replace(/"/g, '\\"')}`).join(' ');
+export function buildSecureRunCmd(
+  containerName: string,
+  envVars: Record<string, string> = {},
+): string {
+  const envString = Object.entries(envVars)
+    .map(([k, v]) => `-e ${k}=${v.replace(/"/g, '\\"')}`)
+    .join(" ");
   return `
     docker run -d \
       --name ${containerName} \

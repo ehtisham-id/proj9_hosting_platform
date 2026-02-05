@@ -1,7 +1,7 @@
-version: '3.8'
 services:
   backend:
-    build: ./backend
+    image: backend
+    build: .
     ports:
       - "3000:3000"
     environment:
@@ -12,8 +12,9 @@ services:
       - postgres
       - redis
     volumes:
-      - ./backend:/app
+      - ./src:/app
       - /app/node_modules
+      - nginx_config:/tmp/nginx-heroku-clone
 
   postgres:
     image: postgres:16
@@ -33,26 +34,20 @@ services:
     volumes:
       - redis_data:/data
 
-  frontend:
-    build: ./frontend
-    ports:
-      - "3001:3000"
-    environment:
-      - REACT_APP_API_URL=http://localhost:3000
-    depends_on:
-      - backend
 
-services:
-  # ... existing services ...
   nginx:
-    build: ./nginx
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
     ports:
       - "80:80"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - nginx_config:/etc/nginx/heroku-clone:ro
     depends_on:
       - backend
 
 volumes:
   postgres_data:
   redis_data:
+  nginx_config:

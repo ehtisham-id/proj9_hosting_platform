@@ -1,7 +1,7 @@
 import express, { Application } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import {morgan} from "morgan";
+import morgan from "morgan";
 import { healthCheckRouter } from "./routes/health.route";
 import { appsRouter } from "./routes/index.route";
 import { initDb } from "./config/database.config";
@@ -63,4 +63,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-
