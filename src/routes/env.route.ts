@@ -5,7 +5,7 @@ import {
 import { authenticateJWT } from '../middleware/rbac.middleware';
 import { generalRateLimit } from '../middleware/security.middleware';
 
-export const envRouter = Router();
+export const envRouter = Router({ mergeParams: true });
 
 // Authentication required
 envRouter.use(authenticateJWT);

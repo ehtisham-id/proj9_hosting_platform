@@ -3,7 +3,7 @@ import { generateProxyHandler, proxyStatusHandler } from '../controllers/proxy.c
 import { authenticateJWT } from '../middleware/rbac.middleware';
 import { generalRateLimit } from '../middleware/security.middleware';
 
-export const proxyRouter = Router();
+export const proxyRouter = Router({ mergeParams: true });
 
 proxyRouter.use(authenticateJWT);
 proxyRouter.use(generalRateLimit);

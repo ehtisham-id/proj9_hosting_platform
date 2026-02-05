@@ -5,7 +5,7 @@ import {
 import { authenticateJWT } from '../middleware/rbac.middleware';
 import { generalRateLimit } from '../middleware/security.middleware';
 
-export const scalingRouter = Router();
+export const scalingRouter = Router({ mergeParams: true });
 
 scalingRouter.use(authenticateJWT);
 scalingRouter.use(generalRateLimit);

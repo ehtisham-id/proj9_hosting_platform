@@ -3,7 +3,7 @@ import { deployHandler, stopHandler, containersHandler } from '../controllers/de
 import { authenticateJWT } from '../middleware/rbac.middleware';
 import { generalRateLimit } from '../middleware/security.middleware';
 
-export const deploymentRouter = Router();
+export const deploymentRouter = Router({ mergeParams: true });
 
 deploymentRouter.use(authenticateJWT);
 deploymentRouter.use(generalRateLimit);
