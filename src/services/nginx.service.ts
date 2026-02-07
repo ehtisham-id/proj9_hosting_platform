@@ -41,24 +41,26 @@ export class NginxManager {
 
     const appName = appResult.rows[0].name;
     const instanceCount = await getInstanceCount(appId);
-    // Assign dynamic ports (30000-40000 range)
-    const ports: number[] = [];
-    for (let i = 0; i < instanceCount; i++) {
-      ports.push(30000 + (appId * 100 + i) % 10000);
-    }
+    const appPort = parseInt(process.env.APP_PORT || "8080", 10);
+    const ports: number[] = Array.from({ length: instanceCount }, () => appPort);
 
-    // Generate upstream servers
-    const upstreams = ports.map((port, i) => `app-${appId}-instance-${i} ${port}`);
+    // Containers are named in docker.service.ts
+    const upstreams = Array.from(
+      { length: instanceCount },
+      (_, i) => `heroku-clone-app-${appId}-instance-${i}`,
+    );
     
     const config = `
 upstream app-${appId} {
   least_conn;
-  ${upstreams.map(u => `  server 127.0.0.1:${u.split(' ')[1]};`).join('\n')}
+  ${upstreams.map(name => `  server ${name}:${appPort} resolve;`).join('\n')}
 }
 
 server {
   listen 80;
   server_name ${appName}.heroku-clone.local;
+  resolver 127.0.0.11 valid=10s;
+  resolver_timeout 5s;
   
   location / {
     proxy_pass http://app-${appId};
@@ -89,9 +91,11 @@ server {
   async reloadNginx(): Promise<void> {
     try {
       const execAsync = promisify(exec);
-      await execAsync('nginx -t && nginx -s reload || echo "NGINX reload simulated"');
+      const nginxContainer = process.env.NGINX_CONTAINER || 'heroku-clone-nginx';
+      await execAsync(`docker exec ${nginxContainer} nginx -t`);
+      await execAsync(`docker exec ${nginxContainer} nginx -s reload`);
     } catch (error) {
-      console.log('NGINX reload simulated for development');
+      console.log('NGINX reload failed or simulated for development');
     }
   }
 

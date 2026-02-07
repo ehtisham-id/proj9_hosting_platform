@@ -12,6 +12,9 @@ export interface ContainerInfo {
   ports: string;
 }
 
+const dockerNetwork = process.env.DOCKER_NETWORK || "heroku-clone-net";
+const appPort = parseInt(process.env.APP_PORT || "8080", 10);
+
 class DockerSandbox {
   private static instance: DockerSandbox;
   private containers: Map<number, string[]> = new Map(); // appId -> containerIds
@@ -27,6 +30,7 @@ class DockerSandbox {
     appId: number,
     instances: number = 1,
     envVars: Record<string, string> = {},
+    image?: string,
   ) {
     const redisKey = `app:${appId}:deployed`;
     const isDeployed = await redisClient.get(redisKey);
@@ -41,22 +45,28 @@ class DockerSandbox {
       const containerName = `heroku-clone-${instanceId}`;
 
       // Strict security constraints
+      const baseImage = image || "node:20-alpine";
+      const command = image
+        ? ""
+        : `node -e "const http=require('http');const port=process.env.PORT||${appPort};http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/plain'});res.end('ok');}).listen(port,()=>console.log('listening',port));setInterval(()=>console.log('['+new Date().toISOString()+'] [STDOUT] Simulated app running...'),2000);"`;
+      const imageAndCommand = `${baseImage}${command ? ` ${command}` : ""}`;
+
       const cmd = `
         docker run -d \
           --name ${containerName} \
           --rm \
-          --network none \
+          --network ${dockerNetwork} \
+          --network-alias ${containerName} \
           --memory=256m \
           --cpus=0.5 \
           --ulimit nofile=1024:1024 \
           --read-only \
           --tmpfs /tmp:size=64m \
-          -e PORT=8080 \
+          -e PORT=${appPort} \
           ${Object.entries(envVars)
             .map(([k, v]) => `-e ${k}=${v.replace(/"/g, '\\"')}`)
             .join(" ")} \
-          node:20-alpine \
-          sh -c "while true; do echo '[\$(date)] [STDOUT] Simulated app running...'; sleep 2; done"
+          ${imageAndCommand}
       `;
 
       try {

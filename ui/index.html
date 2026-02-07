@@ -1236,6 +1236,10 @@
                     <input type="number" x-model="forms.deploy.instances" class="form-input" placeholder="2" min="1" max="10">
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Image (optional)</label>
+                    <input type="text" x-model="forms.deploy.image" class="form-input" placeholder="nginx:alpine">
+                </div>
+                <div class="form-group">
                     <label class="form-label">Environment Variables (JSON, optional)</label>
                     <textarea x-model="forms.deploy.env_vars" class="form-textarea" rows="4" placeholder='{"PORT": "3000", "NODE_ENV": "production"}'></textarea>
                 </div>
@@ -1416,7 +1420,7 @@
                     scaleUp: { id: '', increment: 1 },
                     scaleDown: { id: '', decrement: 1 },
                     getScale: { id: '' },
-                    deploy: { id: '', instances: '', env_vars: '' },
+                    deploy: { id: '', instances: '', image: '', env_vars: '' },
                     stop: { id: '' },
                     getContainers: { id: '' },
                     createProxy: { id: '' },
@@ -1442,7 +1446,7 @@
                     scaleUp: { id: 1, increment: 2 },
                     scaleDown: { id: 1, decrement: 1 },
                     getScale: { id: 1 },
-                    deploy: { id: 1, instances: 2, env_vars: '{"PORT": "3000", "NODE_ENV": "production"}' },
+                    deploy: { id: 1, instances: 2, image: 'nginx:alpine', env_vars: '{"PORT": "3000", "NODE_ENV": "production"}' },
                     stop: { id: 1 },
                     getContainers: { id: 1 },
                     createProxy: { id: 1 },
@@ -1646,9 +1650,10 @@
                 },
 
                 async deployRequest() {
-                    const { id, instances, env_vars } = this.forms.deploy;
+                    const { id, instances, image, env_vars } = this.forms.deploy;
                     const payload = {};
                     if (instances) payload.instances = parseInt(instances);
+                    if (image) payload.image = image;
                     if (env_vars) {
                         try {
                             payload.env_vars = JSON.parse(env_vars);
@@ -1685,7 +1690,7 @@
                         scaleUp: { id: '', increment: 1 },
                         scaleDown: { id: '', decrement: 1 },
                         getScale: { id: '' },
-                        deploy: { id: '', instances: '', env_vars: '' },
+                        deploy: { id: '', instances: '', image: '', env_vars: '' },
                         stop: { id: '' },
                         getContainers: { id: '' },
                         createProxy: { id: '' },

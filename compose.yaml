@@ -2,18 +2,23 @@ services:
   backend:
     image: backend
     build: .
-    ports:
-      - "3000:3000"
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/heroku_clone
       - REDIS_URL=redis://redis:6379
+      - DOCKER_NETWORK=heroku-clone-net
+      - NGINX_CONTAINER=heroku-clone-nginx
+    ports:
+      - "3000:3000"
     depends_on:
       - postgres
       - redis
     volumes:
       - ./src:/app/src
       - nginx_config:/tmp/nginx-heroku-clone
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - heroku_net
 
   postgres:
     image: postgres:16
@@ -25,6 +30,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - heroku_net
 
   redis:
     image: redis:7-alpine
@@ -32,12 +39,15 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - heroku_net
 
 
   nginx:
     build:
       context: .
       dockerfile: nginx/Dockerfile
+    container_name: heroku-clone-nginx
     ports:
       - "80:80"
     volumes:
@@ -45,8 +55,14 @@ services:
       - nginx_config:/etc/nginx/heroku-clone:ro
     depends_on:
       - backend
+    networks:
+      - heroku_net
 
 volumes:
   postgres_data:
   redis_data:
   nginx_config:
+
+networks:
+  heroku_net:
+    name: heroku-clone-net

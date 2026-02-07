@@ -7,7 +7,8 @@ import Joi from 'joi';
 
 const deploySchema = Joi.object({
   instances: Joi.number().min(1).max(10).optional(),
-  env_vars: Joi.object().optional()
+  env_vars: Joi.object().optional(),
+  image: Joi.string().max(500).optional()
 });
 
 export const deployHandler = async (req: AuthRequest, res: Response) => {
@@ -30,9 +31,10 @@ export const deployHandler = async (req: AuthRequest, res: Response) => {
 
     const instances = value.instances ? parseInt(String(value.instances)) : await getInstanceCount(appId);
     const envVars: Record<string, string> = value.env_vars || {};
+    const image: string | undefined = value.image;
 
     // Deploy with sandbox
-    const deployedCount = await dockerSandbox.deployApp(appId, instances, envVars);
+    const deployedCount = await dockerSandbox.deployApp(appId, instances, envVars, image);
     
     // Update app status
     await pool.query("UPDATE apps SET status = 'running', last_deployed = NOW() WHERE id = $1", [appId]);
