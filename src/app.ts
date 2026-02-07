@@ -11,12 +11,14 @@ import {
   ipBlacklist,
 } from "./middleware/security.middleware";
 import authRouter from "./routes/auth.route";
+import { nginxManager } from "./services/nginx.service";
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize DB on startup
+// Initialize DB and nginx default config on startup
 initDb().catch(console.error);
+nginxManager.init().catch(console.error);
 
 // Security middleware
 app.use(
@@ -36,7 +38,10 @@ app.use(
   }),
 );
 
-const rawFrontendUrls = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || "http://localhost:3001";
+const rawFrontendUrls =
+  process.env.FRONTEND_URLS ||
+  process.env.FRONTEND_URL ||
+  "http://localhost:3001";
 const allowedOrigins = rawFrontendUrls
   .split(",")
   .map((s) => s.trim())

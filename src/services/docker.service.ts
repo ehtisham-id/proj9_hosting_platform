@@ -26,12 +26,26 @@ class DockerSandbox {
     return DockerSandbox.instance;
   }
 
+  /** Ensure the Docker network exists before deploying containers */
+  async ensureNetwork(): Promise<void> {
+    try {
+      await execAsync(
+        `docker network inspect ${dockerNetwork} >/dev/null 2>&1 || docker network create ${dockerNetwork}`,
+      );
+    } catch (error) {
+      console.error("Failed to ensure Docker network:", error);
+    }
+  }
+
   async deployApp(
     appId: number,
     instances: number = 1,
     envVars: Record<string, string> = {},
     image?: string,
   ) {
+    // Ensure the Docker network exists
+    await this.ensureNetwork();
+
     const redisKey = `app:${appId}:deployed`;
     const isDeployed = await redisClient.get(redisKey);
     if (isDeployed) {
@@ -46,30 +60,51 @@ class DockerSandbox {
 
       // Strict security constraints
       const baseImage = image || "node:20-alpine";
-      const command = image
-        ? ""
-        : `node -e "const http=require('http');const port=process.env.PORT||${appPort};http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/plain'});res.end('ok');}).listen(port,()=>console.log('listening',port));setInterval(()=>console.log('['+new Date().toISOString()+'] [STDOUT] Simulated app running...'),2000);"`;
-      const imageAndCommand = `${baseImage}${command ? ` ${command}` : ""}`;
 
-      const cmd = `
-        docker run -d \
-          --name ${containerName} \
-          --rm \
-          --network ${dockerNetwork} \
-          --network-alias ${containerName} \
-          --memory=256m \
-          --cpus=0.5 \
-          --ulimit nofile=1024:1024 \
-          --read-only \
-          --tmpfs /tmp:size=64m \
-          -e PORT=${appPort} \
-          ${Object.entries(envVars)
-            .map(([k, v]) => `-e ${k}=${v.replace(/"/g, '\\"')}`)
-            .join(" ")} \
-          ${imageAndCommand}
-      `;
+      // Build image + command. Use single quotes around the node script
+      // to avoid shell interpretation issues (no single quotes in JS code).
+      let imageAndCommand: string;
+      if (image) {
+        // User-provided image: run it as-is (no default node script)
+        console.log(`[Docker] Using custom image: ${image}`);
+        imageAndCommand = baseImage;
+      } else {
+        // No image provided: use default node:20-alpine with built-in HTTP server
+        console.log(`[Docker] Using default simulated app with ${baseImage}`);
+        const nodeScript = `var http=require("http");var port=process.env.PORT||${appPort};http.createServer(function(req,res){res.writeHead(200,{"Content-Type":"text/plain"});res.end("ok")}).listen(port,function(){console.log("listening",port)});setInterval(function(){console.log("["+new Date().toISOString()+"] [STDOUT] Simulated app running...")},2000)`;
+        imageAndCommand = `${baseImage} node -e '${nodeScript}'`;
+      }
+
+      // Build env vars with safe quoting
+      const envString = Object.entries(envVars)
+        .map(([k, v]) => `-e ${k}='${v.replace(/'/g, "'\\''")}' `)
+        .join(" ");
+
+      // Only set default PORT if user hasn't provided one in envVars
+      const portEnv = envVars.PORT ? "" : `-e PORT=${appPort}`;
+
+      const cmd = [
+        "docker run -d",
+        `--name ${containerName}`,
+        `--network ${dockerNetwork}`,
+        `--network-alias ${containerName}`,
+        "--memory=256m",
+        "--cpus=0.5",
+        "--ulimit nofile=1024:1024",
+        "--read-only",
+        "--tmpfs /tmp:size=64m",
+        // Also add writable dirs that some images need
+        "--tmpfs /var/cache:size=32m",
+        "--tmpfs /var/run:size=8m",
+        portEnv,
+        envString,
+        imageAndCommand,
+      ]
+        .filter(Boolean)
+        .join(" ");
 
       try {
+        console.log(`[Docker] Running: ${cmd}`);
         const { stdout } = await execAsync(cmd);
         const containerId = stdout.trim();
         containerIds.push(containerId);
@@ -81,8 +116,11 @@ class DockerSandbox {
           `Instance ${i + 1}/${instances} deployed: ${containerId.slice(0, 12)}`,
           instanceId,
         );
-      } catch (error) {
-        console.error(`Failed to deploy instance ${i}:`, error);
+      } catch (error: any) {
+        console.error(
+          `Failed to deploy instance ${i}:`,
+          error?.stderr || error?.message || error,
+        );
         await saveLog(
           appId,
           "stderr",
@@ -98,38 +136,46 @@ class DockerSandbox {
   }
 
   async stopApp(appId: number) {
-    const containerIds = this.containers.get(appId) || [];
-    for (const containerId of containerIds) {
-      try {
-        await execAsync(`docker stop ${containerId} || true`);
-        await execAsync(`docker rm ${containerId} || true`);
-      } catch (error) {
-        console.error(`Failed to stop container ${containerId}:`, error);
+    // Use docker ps to find actual running containers instead of only in-memory Map
+    try {
+      const { stdout } = await execAsync(
+        `docker ps -a --filter "name=heroku-clone-app-${appId}-instance" --format "{{.ID}}"`,
+      );
+      const liveIds = stdout.trim().split("\n").filter(Boolean);
+      for (const containerId of liveIds) {
+        try {
+          await execAsync(`docker stop ${containerId} 2>/dev/null || true`);
+          await execAsync(`docker rm ${containerId} 2>/dev/null || true`);
+        } catch (error) {
+          console.error(`Failed to stop container ${containerId}:`, error);
+        }
       }
+    } catch (error) {
+      console.error(`Failed to list containers for app ${appId}:`, error);
     }
     this.containers.delete(appId);
     await redisClient.del(`app:${appId}:deployed`);
   }
 
   async getContainers(appId: number): Promise<ContainerInfo[]> {
-    const containers: ContainerInfo[] = [];
-    const containerIds = this.containers.get(appId) || [];
-
-    for (const containerId of containerIds) {
-      try {
-        const { stdout } = await execAsync(
-          `docker inspect ${containerId} --format '{{json .State.Status}},{{json .Name}}'`,
-        );
-        const [status, name] = stdout.trim().split(",");
-        containers.push({
-          id: containerId,
-          name: name.replace(/"/g, ""),
-          status: status.replace(/"/g, ""),
-          ports: "",
+    // Use docker ps -a to discover containers (including stopped/crashed ones)
+    try {
+      const { stdout } = await execAsync(
+        `docker ps -a --filter "name=heroku-clone-app-${appId}-instance" --format "{{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"`,
+      );
+      if (!stdout.trim()) return [];
+      return stdout
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => {
+          const [id, name, status, ports] = line.split("\t");
+          return { id, name, status, ports: ports || "" };
         });
-      } catch (error) {}
+    } catch (error) {
+      console.error(`Failed to list containers for app ${appId}:`, error);
+      return [];
     }
-    return containers;
   }
 }
 
